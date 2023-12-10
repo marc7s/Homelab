@@ -1,0 +1,1 @@
+pass show ansible-vault-password

@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+  
+  prod-fullstackwebapp-sqlserver:
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    container_name: prod-fullstackwebapp-database
+    restart: always # Prod should restart automatically on VM startup
+    ports:
+      - 7433:1433 # Prod ports
+    env_file:
+      - /Deploy/prod-leaderboard-database/.env # Used by the MS SQL image
+    volumes:
+      - /Deploy/prod-leaderboard-database:/var/opt/mssql:Z # Create a volume to persistantly store DB data

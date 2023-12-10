@@ -1,0 +1,125 @@
+---
+- name: Prepare docker VM
+  become: true
+  become_method: su
+  become_user: root
+  hosts: homelab_docker
+  roles:
+    - geerlingguy.pip
+    - rootssh # Used with VS Code SSH plugin to develop remotely
+  tasks:
+    - name: Install pip packages
+      ansible.builtin.pip:
+        name:
+          # This is required due to an issue (could not use geerlingguy.pip role as he recommends), see:
+          # https://github.com/ansible-collections/community.docker/issues/672#issuecomment-1763439818
+          # and
+          # https://www.reddit.com/r/ansible/comments/ffphxz/rant_centos_7_ansible_dockercompose_so_much_hair/
+          - PyYAML==5.3.1
+          - docker
+          - docker-compose
+
+- name: Setup docker VM
+  become: true
+  become_method: su
+  become_user: root
+  hosts: homelab_docker
+  roles:
+    - geerlingguy.docker
+  tasks:
+    - name: Install Rsync, used by Ansible synchronize
+      ansible.builtin.apt:
+        name: rsync
+        state: present
+
+    - name: Enable Rsync
+      ansible.builtin.systemd_service:
+        name: rsync
+        state: started
+        enabled: true
+
+    - name: Install npm, used for development
+      ansible.builtin.apt:
+        name: npm
+        state: present
+
+    - name: Copy Portainer docker compose
+      ansible.builtin.copy:
+        src: files/portainer-docker-compose.yml
+        dest: /docker-compose.yml
+        owner: docker
+        group: docker
+        mode: '0644'
+
+    - name: Set git credentials
+      ansible.builtin.lineinfile:
+        path: ~/.git-credentials
+        line: 'https://{{ vault_github_username }}:{{ vault_github_pat }}@github.com'
+        create: true
+        state: present
+
+    - name: Create Repos folder
+      ansible.builtin.file:
+        path: /Repos
+        state: directory
+        owner: docker
+        group: docker
+        mode: '0644'
+
+    - name: Create Static Websites folder
+      ansible.builtin.file:
+        path: /Repos/Static-Websites
+        state: directory
+        owner: docker
+        group: docker
+        mode: '0644'
+
+    # With this setting enabled, if you clone a repo to a Linux machine that has been pushed from a Windows machine,
+    # the file permissions could be different, causing git to think of them as different files, therefore
+    # thinking that the repository has local changes and is not in sync with the remote. This disables that check
+    - name: Disable filemode checks to not differenciate files when cloning between Windows and Linux machines
+      community.general.git_config:
+        name: core.filemode
+        scope: global
+        value: 'false'
+
+    # If the repositories have already been cloned, but the permissions have changed git will fail
+    # with an error of dubious ownership. Therefore we disable it temporarily to clone the repositories
+    - name: Temporarily disable safe directory checks
+      community.general.git_config:
+        name: safe.directory
+        scope: global
+        value: '*'
+
+    - name: Clone Configuration repository
+      ansible.builtin.git:
+        repo: 'https://{{ vault_github_pat }}@github.com/{{ vault_github_username }}/{{ configuration_repository_name }}.git'
+        dest: '{{ remote_repo_dir }}'
+        accept_hostkey: true
+
+    - name: Clone Docker container repositories
+      ansible.builtin.git:
+        repo: 'https://{{ vault_github_pat }}@github.com/{{ vault_github_username }}/{{ item }}.git'
+        dest: '/Repos/{{ item }}'
+        accept_hostkey: true
+      loop: "{{ docker_container_repositories }}"
+
+    - name: Clone static website repositories
+      ansible.builtin.git:
+        repo: 'https://{{ vault_github_pat }}@github.com/{{ vault_github_username }}/{{ item }}.git'
+        dest: '/Repos/Static-Websites/{{ item }}'
+        accept_hostkey: true
+      loop: "{{ docker_static_website_repositories }}"
+
+    - name: Re-enable safe directory checks
+      community.general.git_config:
+        name: safe.directory
+        scope: global
+        state: absent
+
+    - name: Start Portainer
+      community.docker.docker_compose:
+        project_src: /
+        files:
+          - docker-compose.yml
+      register: output

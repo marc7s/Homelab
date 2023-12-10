@@ -1,0 +1,33 @@
+---
+- name: Deploy infrastructure applications
+  hosts: homelab_docker
+  tasks:
+    - name: Deploy Homer
+      tags:
+        - homer
+      import_role:
+        name: deploy-docker
+      vars:
+        relative_project_root: Homer
+        relative_compose_root: Homer
+        remote_build_directory: '{{ remote_repo_dir }}/Configuration/Containers/Homer'
+        project_name: 'homer'
+        compose_name: 'homer'
+      when: env | default('') == 'dev' # No need for a production Homer container, so only create a dev container
+
+    - name: Deploy Cloudflared Tunnel
+      tags:
+        - tunnel
+        - cloudflared-tunnel
+      import_role:
+        name: deploy-docker
+      vars:
+        build: false
+        relative_project_root: CloudflaredTunnel
+        relative_compose_root: CloudflaredTunnel
+        remote_build_directory: '/Deploy/{{ env }}-cloudflared-tunnel'
+        project_name: 'cloudflared-tunnel'
+        compose_name: 'cloudflared-tunnel'
+        required_folders:
+          - '/Deploy/{{ env }}-cloudflared-tunnel' # As this is an image and so has no repository, but we still need a deployment folder, create one
+      when: env | default('') == 'prod' # No need for a development Cloudflare Tunnel, so only create a production container

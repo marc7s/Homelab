@@ -1,0 +1,4 @@
+export const environment = {
+  production: false,
+  additional_environment_variable: 'valuehere'
+};

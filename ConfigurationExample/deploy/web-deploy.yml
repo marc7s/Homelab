@@ -1,0 +1,90 @@
+---
+- name: Deploy web applications
+  hosts: homelab_docker
+  tasks:
+    # Consider a full stack Angular application inside the repository `FullStackWebApp`
+    # with the following directory structure, i.e. one folder for each part of the stack.
+    # This example will deploy two versions of the web application, a development version and a production version
+
+    # FullStackWebApp
+    # ├── Database/
+    # │   └── src/
+    # ├── Backend/
+    # │   └── src/
+    # └── Frontend/
+    #     ├── angular.json
+    #     └── src/
+    - name: Deploy full stack Angular application
+      tags:
+        - angularapp
+      block:
+        - name: Deploy application database
+          include_role:
+            name: deploy-docker
+          vars:
+            build: false
+            relative_project_root: FullStackWebApp/Database
+            remote_build_directory: '/Deploy/{{ env }}-fullstackwebapp-database'
+            project_name: 'fullstackwebapp-database'
+            compose_name: 'fullstackwebapp-database'
+            required_folders:
+              - '/Deploy/{{ env }}-fullstackwebapp-database'
+          tags:
+            - fullstackwebapp-database
+
+        - name: Deploy application backend
+          import_role:
+            name: deploy-docker
+          vars:
+            relative_project_root: FullStackWebApp/Backend
+            project_name: 'fullstackwebapp-backend'
+            compose_name: 'fullstackwebapp-backend'
+          tags:
+            - fullstackwebapp-backend
+
+        - name: Deploy application frontend
+          import_role:
+            name: deploy-docker
+          vars:
+            relative_project_root: FullStackWebApp/Frontend
+            project_name: 'fullstackwebapp-frontend'
+            compose_name: 'fullstackwebapp-frontend'
+            is_angular_project: true
+          tags:
+            - fullstackwebapp-frontend
+
+    - name: Deploy static websites
+      tags:
+        - static-websites
+        - static
+      block:
+        - name: Deploy PHP processor
+          import_role:
+            name: deploy-docker
+          vars:
+            relative_project_root: php
+            project_name: 'php'
+            compose_name: 'php'
+          tags:
+            - static
+            - static-php
+            - static-websites
+
+        - name: Deploy static websites
+          include_role:
+            name: deploy-static-web
+          vars:
+            image_name: 'nginx:bookworm'
+            relative_project_root: '{{ item.relative_project_root }}'
+            project_name: '{{ item.project_name }}'
+            php_processor_name: '{{ env_name }}-php'
+            php_processor_port: 9000
+            external_port: '{{ (env_name == "prod") | ternary(item.prod_port, item.dev_port) }}'
+          # For each of the following folders that contain static websites, deploy them
+          loop:
+            - { project_name: 'site1', relative_project_root: 'Site 1', dev_port: 5050, prod_port: 7050 }
+            - { project_name: 'site2', relative_project_root: 'Site 2', dev_port: 5051, prod_port: 7051 }
+            - { project_name: 'site3', relative_project_root: 'Site 3', dev_port: 5052, prod_port: 7052 }
+          tags:
+            - static
+            - static-websites

@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+
+  dev-fullstackwebapp-database:
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    container_name: dev-fullstackwebapp-database
+    restart: 'no' # Dev environment does not need to be live all the time
+    ports:
+      - 1433:1433 # Dev ports
+    env_file:
+      - /Deploy/dev-fullstackwebapp-database/.env # Used by the MS SQL image
+    volumes:
+      - /Deploy/dev-fullstackwebapp-database:/var/opt/mssql:Z # Create a volume to persistantly store DB data

@@ -1,0 +1,10 @@
+---
+- name: Deploy dev static website
+  ansible.builtin.include_tasks:
+    file: dev.yml
+  when: env in ['dev']
+
+- name: Deploy prod static website
+  ansible.builtin.include_tasks:
+    file: prod.yml
+  when: env in ['prod']

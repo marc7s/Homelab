@@ -1,0 +1,14 @@
+---
+argument_specs:
+  main:
+    short_description: A default entry point for deploying a static HTML/PHP website
+    options:
+      relative_project_root:
+        type: "path"
+        required: true
+        description: "The relative path to the project root for this docker container, relative to the remote_repo_dir folder"
+
+      project_name:
+        type: "str"
+        required: true
+        description: "The name of the container"

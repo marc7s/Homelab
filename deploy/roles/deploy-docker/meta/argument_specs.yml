@@ -1,0 +1,57 @@
+---
+argument_specs:
+  main:
+    short_description: A default entry point for deploying a docker container
+    options:
+      relative_project_root:
+        type: "path"
+        required: true
+        description: "The relative path to the project root for this docker container, relative to the remote_repo_dir folder"
+
+      relative_compose_root:
+        type: "path"
+        required: false
+        default: '{{ relative_project_root }}'
+        description: "The relative path to the compose root for this docker container, relative to the remote_repo_dir/docker folder"
+
+      remote_build_directory:
+        type: "path"
+        required: false
+        default: '/Repos/{{ relative_project_root }}'
+
+      project_name:
+        type: "str"
+        required: true
+        description: "The name of the container"
+
+      compose_name:
+        type: "str"
+        required: true
+        description: "The name of the compose file, ignoring the postpended `.ENV_NAME.yml`, inside the .../Configuration/docker... folder"
+
+      env:
+        type: "str"
+        required: true
+        choices: ['dev', 'prod']
+        description: "The environment to deploy"
+
+      build:
+        type: "bool"
+        required: false
+        default: true
+        description: "Whether the docker image needs to be built, or not (such as when it is pulled from Dockerhub)"
+      
+      required_folders:
+        type: "list"
+        elements: "path"
+        required: false
+        default: []
+        description: "Any folders that need to be created for deploying the container"
+
+      # Since Angular projects has built in environment variable support through their /environments/environment.ENV_NAME.ts files,
+      # enabling this setting will replace those files instead of copying .env files as usual
+      is_angular_project:
+        type: "bool"
+        required: false
+        default: false
+        description: "Enable if it is an Angular project, to set up the environment variables correctly"

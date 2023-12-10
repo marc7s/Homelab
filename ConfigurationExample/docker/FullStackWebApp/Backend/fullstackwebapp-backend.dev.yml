@@ -1,0 +1,15 @@
+version: "3.3"
+services:
+
+  dev-fullstackwebapp-backend:
+    build: /Repos/FullStackWebApp/Backend
+    container_name: dev-fullstackwebapp-backend
+    command: npm run dev
+    restart: 'no' # Dev environment does not need to be live all the time
+    ports:
+      - 5001:5001 # Dev ports
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - /Repos/FullStackWebApp/Backend:/usr/app
+      - /usr/app/node_modules # Create a volume for `node_modules` so node modules are not overwritten during build

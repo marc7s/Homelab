@@ -1,0 +1,25 @@
+---
+# The proxbox server itself, running Proxmox
+proxbox:
+  hosts:
+    YOUR_PROXBOX_PROXMOX_IP_HERE: 
+      ansible_user: "{{ vault_proxmox_ssh_username }}"
+      ansible_password: "{{ vault_proxmox_ssh_password }}"
+
+# The TrueNAS Scale VM inside Proxbox
+proxbox_truenas_scale:
+  hosts:
+    YOUR_PROXBOX_TRUENAS_SCALE_VM_IP_HERE
+
+# The Docker VM inside Proxbox
+proxbox_docker:
+  hosts:
+    YOUR_PROXBOX_DOCKER_VM_IP_HERE:
+      ansible_user: "{{ vault_docker_ssh_username }}"
+      ansible_password: "{{ vault_docker_ssh_password }}"
+      ansible_become_pass: "{{ vault_docker_ssh_password }}"
+
+# The Home Assistant VM inside Proxbox
+proxbox_home_assistant:
+  hosts:
+    YOUR_HOMELAB_HOME_ASSISTANT_VM_IP_HERE

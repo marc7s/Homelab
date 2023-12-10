@@ -1,0 +1,43 @@
+---
+api_host: "homelabservername"
+node: "homelabservername"
+
+modules:
+  truenas_scale:
+    # Change this to false if you do not want a TrueNAS Scale VM
+    enabled: true
+    name: truenas-scale
+    memory: 32768
+    cores: 4
+    disk_size: 32
+    disk_storage: local-zfs
+    cpu_type: x86-64-v2-AES
+    bios: ovmf
+    machine_type: q35
+    # Default to use a network bridge called `vmbr10`, which you will have created if you followed the instructions for setting up a separate NIC
+    network_bridge: vmbr10
+    scsi_controller: virtio-scsi-single
+    iso_file_name: "TrueNAS-SCALE-22.12.3.3.iso"
+    # Comment out the next line if you do not have an HBA
+    hba_resource_mapping_name: "HBA"
+    boot_order: 
+      - "scsi0"
+      - "ide2"
+
+  docker:
+    # Change this to false if you do not want a docker VM
+    enabled: true
+    name: docker
+    memory: 65536
+    cores: 4
+    disk_size: 200
+    disk_storage: local-zfs
+    cpu_type: x86-64-v2-AES
+    bios: ovmf
+    machine_type: q35
+    network_bridge: vmbr0
+    scsi_controller: virtio-scsi-single
+    iso_file_name: "debian-12.1.0-amd64-netinst.iso"
+    boot_order: 
+      - "scsi0"
+      - "ide2"

@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+
+  prod-fullstackwebapp-frontend:
+    build: 
+      context: /Repos/FullStackWebApp
+      dockerfile: /Repos/FullStackWebApp/FrontendProdDockerfile
+    container_name: prod-fullstackwebapp-frontend
+    restart: 'always' # Prod should restart automatically on VM startup
+    ports:
+      - 7000:80 # Prod ports
+    volumes:
+      - /usr/app/node_modules # Create a volume for `node_modules` so node modules are not overwritten during build

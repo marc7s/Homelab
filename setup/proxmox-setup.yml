@@ -1,0 +1,96 @@
+---
+- name: Create VMs
+  become: true
+  become_user: root
+  hosts: homelab_proxmox
+  tasks:
+    - name: Update packages
+      ansible.builtin.apt:
+        force_apt_get: true
+        update_cache: true
+    
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name: python3-proxmoxer
+        state: present
+
+    - name: Create TrueNAS Scale VM
+      vars:
+        vmid: 100
+      community.general.proxmox_kvm:
+        vmid: "{{ vmid }}"
+        api_user: "{{ vault_proxmox_username }}@pam"
+        api_password: "{{ vault_proxmox_password }}"
+        api_host: "{{ api_host }}"
+        name: "{{ modules.truenas_scale.name }}"
+        node: "{{ node }}"
+        proxmox_default_behavior: compatibility
+        bios: ovmf
+        cpuunits: 100
+        efidisk0:
+          efitype: 4m
+          storage: "{{ modules.truenas_scale.disk_storage }}"
+          format: raw
+          pre_enrolled_keys: false
+        vga: std
+        tablet: true
+        onboot: true
+        autostart: true
+        ide:
+          ide2: "local:iso/{{ modules.truenas_scale.iso_file_name }},media=cdrom,size=1713892K"
+        # Only add the `hostpci` key if a HBA resource mapping name is provided
+        hostpci: "{{ omit if modules.truenas_scale.hba_resource_mapping_name is not defined else {'hostpci0': 'mapping=' + modules.truenas_scale.hba_resource_mapping_name} }}"
+        net:
+          net0: "virtio,bridge={{ modules.truenas_scale.network_bridge }},firewall=1"
+        scsi:
+          scsi0: "{{ modules.truenas_scale.disk_storage }}:{{ modules.truenas_scale.disk_size }},iothread=1"
+        cores: "{{ modules.truenas_scale.cores }}"
+        memory: "{{ modules.truenas_scale.memory }}"
+        balloon: "{{ modules.truenas_scale.memory }}"
+        cpu: "{{ modules.truenas_scale.cpu_type }}"
+        scsihw: "{{ modules.truenas_scale.scsi_controller }}"
+        machine: "{{ modules.truenas_scale.machine_type }}"
+        boot: "order={{ modules.truenas_scale.boot_order | join(';') }}"
+
+        state: present
+      when: modules.truenas_scale.enabled
+
+    - name: Create Docker VM
+      vars:
+        vmid: 110
+      community.general.proxmox_kvm:
+        vmid: "{{ vmid }}"
+        api_user: "{{ vault_proxmox_username }}@pam"
+        api_password: "{{ vault_proxmox_password }}"
+        api_host: "{{ api_host }}"
+        name: "{{ modules.docker.name }}"
+        node: "{{ node }}"
+        proxmox_default_behavior: compatibility
+        agent: true
+        bios: ovmf
+        cpuunits: 100
+        efidisk0:
+          efitype: 4m
+          storage: "{{ modules.docker.disk_storage }}"
+          format: raw
+          pre_enrolled_keys: false
+        vga: std
+        tablet: true
+        onboot: true
+        autostart: true
+        ide:
+          ide2: "local:iso/{{ modules.docker.iso_file_name }},media=cdrom,size=1713892K"
+        net:
+          net0: "virtio,bridge={{ modules.docker.network_bridge }},firewall=1"
+        scsi:
+          scsi0: "{{ modules.docker.disk_storage }}:{{ modules.docker.disk_size }},iothread=1"
+        cores: "{{ modules.docker.cores }}"
+        memory: "{{ modules.docker.memory }}"
+        balloon: "{{ modules.docker.memory }}"
+        cpu: "{{ modules.docker.cpu_type }}"
+        scsihw: "{{ modules.docker.scsi_controller }}"
+        machine: "{{ modules.docker.machine_type }}"
+        boot: "order={{ modules.docker.boot_order | join(';') }}"
+
+        state: present
+      when: modules.docker.enabled

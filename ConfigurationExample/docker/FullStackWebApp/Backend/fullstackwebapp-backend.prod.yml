@@ -1,0 +1,12 @@
+version: "3.3"
+services:
+
+  prod-fullstackwebapp-backend:
+    build: /Repos/FullStackWebApp/Backend
+    container_name: prod-fullstackwebapp-backend
+    command: npm run prod
+    restart: always # Prod should restart automatically on VM startup
+    ports:
+      - 7001:7001 # Prod ports
+    volumes:
+      - /usr/app/node_modules # Create a volume for `node_modules` so node modules are not overwritten during build

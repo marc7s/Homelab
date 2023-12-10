@@ -1,0 +1,10 @@
+---
+- name: Deploy dev docker container
+  ansible.builtin.include_tasks:
+    file: dev.yml
+  when: env in ['dev']
+
+- name: Deploy prod docker container
+  ansible.builtin.include_tasks:
+    file: prod.yml
+  when: env in ['prod']

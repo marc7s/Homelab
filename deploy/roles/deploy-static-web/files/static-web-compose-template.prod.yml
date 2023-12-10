@@ -1,0 +1,28 @@
+version: "3.3"
+services:
+
+  {{ env_name }}-{{ project_name }}:
+    build:
+      context: '{{ build_directory }}'
+      dockerfile: '{{ deploy_directory }}/ProdDockerfile'
+    container_name: {{ env_name }}-{{ project_name }}
+    restart: 'always'
+    ports:
+      - {{ external_port }}:80
+    volumes:
+      - type: bind
+        source: {{ deploy_directory }}/nginx.{{ env_name }}.conf
+        target: /etc/nginx/conf.d/default.conf
+      - web-static-{{ project_name }}-volume:/var/www/html
+    networks:
+      - web-static-network
+
+networks:
+  web-static-network:
+    name: web-static-network
+    external: true
+
+volumes:
+  web-static-{{ project_name }}-volume:
+    name: web-static-{{ project_name }}-volume
+    external: true

@@ -1,0 +1,9 @@
+---
+- name: restart ssh
+  become: true
+  become_method: su
+  become_user: root
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: restarted
+    enabled: true

@@ -1,0 +1,54 @@
+---
+- name: Set paths
+  ansible.builtin.set_fact:
+    build_directory: '/Repos/Static-Websites/{{ relative_project_root }}'
+    deploy_directory: '/Deploy/Static-Websites/{{ env_name }}-{{ project_name }}'
+    compose_directory: '{{ local_repo_dir }}/Configuration/docker/static-web'
+    compose_name: '{{ project_name }}'
+    is_build_mode: '{{ env_name == "prod" }}'
+
+- name: Ensure Deploy directory exists
+  become: true
+  become_method: su
+  become_user: root
+  ansible.builtin.file:
+    path: '{{ deploy_directory }}'
+    state: directory
+
+- name: Generate nginx config file
+  become: true
+  become_method: su
+  become_user: root
+  ansible.builtin.template:
+    src: 'files/nginx.{{ env_name }}.conf'
+    dest: '{{ deploy_directory }}/nginx.{{ env_name }}.conf'
+    owner: docker
+    group: docker
+    mode: '0644'
+
+- name: Generate Dockerfile
+  become: true
+  become_method: su
+  become_user: root
+  ansible.builtin.template:
+    src: 'files/static-web-dockerfile-template.{{ env_name }}.yml'
+    dest: '{{ deploy_directory }}/ProdDockerfile'
+    owner: docker
+    group: docker
+    mode: '0644'
+  when: is_build_mode
+
+- name: Generate compose file
+  delegate_to: localhost
+  ansible.builtin.template:
+    src: 'files/static-web-compose-template.{{ env_name }}.yml'
+    dest: '{{ compose_directory }}/{{ compose_name }}.{{ env_name }}.yml'
+
+- name: Deploy the container
+  import_role:
+    name: deploy-docker
+  vars:
+    relative_project_root: ''
+    relative_compose_root: static-web
+    project_name: '{{ project_name }}'
+    compose_name: '{{ compose_name }}'

@@ -1,0 +1,6 @@
+---
+- name: Deploy
+  ansible.builtin.include_tasks:
+    file: shared.yml
+  vars:
+    env_name: 'prod'
