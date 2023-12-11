@@ -1,27 +1,27 @@
 ---
-api_host: "homelabservername"
-node: "homelabservername"
+api_host: "proxbox"
+node: "proxbox"
 
-# Set the name of your local storage inside Proxmox.
-# If you set up Proxmox with zfs, the default name is `local-zfs`, but if you only used one boot drive the default is `local-lvm`
-local_storage_name: "local-zfs"
+# Set the name of your local storage inside Proxbox.
+# Remember, this is for the Proxbox VM inside your homelab Proxmox instance
+# So it is most likely `local-lvm` rather than `local-zfs`, as you will not need dual boot drives for Proxbox which is just used for development
+local_storage_name: "local-lvm"
 
 modules:
   truenas_scale:
     # Change this to false if you do not want a TrueNAS Scale VM
     enabled: true
     name: truenas-scale
-    memory: 32768
+    memory: 8196
     cores: 4
-    disk_size: 32
-    cpu_type: x86-64-v2-AES
-    bios: ovmf
+    disk_size: 12
+    cpu_type: host
+    bios: SeaBIOS
     machine_type: q35
     # Default to use a network bridge called `vmbr10`, which you will have created if you followed the instructions for setting up a separate NIC
     network_bridge: vmbr10
     scsi_controller: virtio-scsi-single
     iso_file_name: "TrueNAS-SCALE-22.12.3.3.iso"
-    # Comment out the next line if you do not have an HBA
     hba_resource_mapping_name: "HBA"
     boot_order: 
       - "scsi0"
@@ -31,9 +31,9 @@ modules:
     # Change this to false if you do not want a docker VM
     enabled: true
     name: docker
-    memory: 65536
+    memory: 8196
     cores: 4
-    disk_size: 200
+    disk_size: 30
     cpu_type: x86-64-v2-AES
     bios: ovmf
     machine_type: q35

@@ -29,7 +29,7 @@
         cpuunits: 100
         efidisk0:
           efitype: 4m
-          storage: "{{ modules.truenas_scale.disk_storage }}"
+          storage: "{{ local_storage_name }}"
           format: raw
           pre_enrolled_keys: false
         vga: std
@@ -43,7 +43,7 @@
         net:
           net0: "virtio,bridge={{ modules.truenas_scale.network_bridge }},firewall=1"
         scsi:
-          scsi0: "{{ modules.truenas_scale.disk_storage }}:{{ modules.truenas_scale.disk_size }},iothread=1"
+          scsi0: "{{ local_storage_name }}:{{ modules.truenas_scale.disk_size }},iothread=1"
         cores: "{{ modules.truenas_scale.cores }}"
         memory: "{{ modules.truenas_scale.memory }}"
         balloon: "{{ modules.truenas_scale.memory }}"
@@ -71,7 +71,7 @@
         cpuunits: 100
         efidisk0:
           efitype: 4m
-          storage: "{{ modules.docker.disk_storage }}"
+          storage: "{{ local_storage_name }}"
           format: raw
           pre_enrolled_keys: false
         vga: std
@@ -83,7 +83,7 @@
         net:
           net0: "virtio,bridge={{ modules.docker.network_bridge }},firewall=1"
         scsi:
-          scsi0: "{{ modules.docker.disk_storage }}:{{ modules.docker.disk_size }},iothread=1"
+          scsi0: "{{ local_storage_name }}:{{ modules.docker.disk_size }},iothread=1"
         cores: "{{ modules.docker.cores }}"
         memory: "{{ modules.docker.memory }}"
         balloon: "{{ modules.docker.memory }}"

@@ -188,7 +188,7 @@ control_node_root_password: THE_ROOT_PASSWORD_FOR_YOUR_ANSIBLE_CONTROL_NODE
 
 ## Setting up the server
 1. With a fresh proxmox installation, go into `Datacenter -> Resource Mappings` and add a mapping for the HBA if you have one with the name `HBA` under `PCI Devices`. Also add your Zigbee USB stick if you have one under USB Devices, with the name `Zigbee`. If you do not have an HBA, you need to comment out that line in the file `Configuration/group_vars/homelab_proxmox/vars.yml`
-2. Enter your homelab name in the file `Configuration/group_vars/homelab_proxmox/vars.yml`, by replacing the `api_host` and `node` values. This is because the deployment script needs to find the correct Proxmox instance, which is does by name
+2. Enter your homelab name in the file `Configuration/group_vars/homelab_proxmox/vars.yml`, by replacing the `api_host` and `node` values. Also check that the `local_storage_name` is set to match your setup. The `api_host` and `node` values are required because the deployment script needs to find the correct Proxmox instance, which is does by name
 3. Run the proxmox pre-setup playbook
 `ansible-playbook setup/pre-proxmox-setup.yml`
 4. Go into the `Configuration/group_vars/homelab_proxmox/vars.yml` file and change the `enabled` attribute to `false` for the modules you do not want
@@ -366,7 +366,8 @@ This is useful for development of this project, as it allows you to virtualize a
 6. Go into the Homelab Proxmox UI (not the proxbox UI) and stop the VM, right click it and select Convert to template
 7. Rename the template to `proxbox-template`
 8. Right click the template, select `Clone`, give it a name and start the cloned container
-9. Now you can run the Ansible scripts for setting up the server, as long as you change `ansible.cfg` to use `dev-hosts.yml` instead. Before running Ansible scripts on the containers, you also need to manually SSH into them first to set up the fingerprints
+9. Edit the `Configuration/group_vars/homelab_proxmox/vars.yml` file, changing the settings as you wish. For the best setup, you should use the same configuration as for the homelab server itself, but you could decrease the resources such as RAM or disk space as this is only for testing. However, be careful with decreasing the disk space too much, you could run into issues where you run out of disk space, meaning you would have to recreate the VM to increase the disk space
+10. Now you can run the Ansible scripts for setting up the server, as long as you change `ansible.cfg` to use the `dev-hosts.yml` inventory file instead of `hosts.yml`. Before running Ansible scripts on the containers, you also need to manually SSH into them first to set up the fingerprints
 
 ## Deployment
 Run the correct deployment scripts, depending on what you want to deploy. Adding tags means Ansible will skip any tasks without those specific tags, which allows you to deploy only a specific project.
