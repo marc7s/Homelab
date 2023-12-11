@@ -101,6 +101,7 @@
     project_src: '{{ remote_build_directory }}'
     project_name: '{{ project_name }}-{{ env_name }}'
     build: true
+    restarted: true
     files:
       - '{{ remote_compose_path }}'
 

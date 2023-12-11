@@ -94,7 +94,7 @@
     - name: Clone Configuration repository
       ansible.builtin.git:
         repo: 'https://{{ vault_github_pat }}@github.com/{{ vault_github_username }}/{{ configuration_repository_name }}.git'
-        dest: '{{ remote_repo_dir }}'
+        dest: '{{ remote_repo_dir }}/Configuration'
         accept_hostkey: true
 
     - name: Clone Docker container repositories
