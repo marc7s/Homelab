@@ -183,6 +183,7 @@ remote_repo_dir: THE_PATH_TO_THIS_REPO_ON_YOUR_REMOTE_SERVERS
 
 control_node_root_password: THE_ROOT_PASSWORD_FOR_YOUR_ANSIBLE_CONTROL_NODE
 ```
+12. Remove the placeholder `Configuration/group_vars/all/vault.example` file
 13. You are now ready to run the playbooks using the `ansible-playbook` command. You will be instructed later when you should run playbooks. **If there are issues with the vault password file when trying to run the playbooks**, you could circumvent that by adding the parameter `--ask--vault-pass` to the end of the `ansible-playbook` command if you are having a hard time fixing the issue.
 
 ## Setting up the server
@@ -226,10 +227,11 @@ docker_static_website_repositories:
   - ...
 ```
 Here, `docker_container_repositories` are all the repositories your docker containers will require, **except** static website repositories (they will be hosted with PHP, so they can either be static HTML or PHP projects). Those should be placed in `docker_static_website_repositories` instead. The docker setup script will clone all these repositories for you, that you may then reference in docker composes or playbooks
-3. Run the `setup/docker_setup.yml` playbook
-4. Inside the project folders of the `Configuration/docker/` folder, create `.env.ENV_NAME_HERE.vault` files using `ansible-vault create Configuration/docker/PROJECT_NAME_HERE/.env.ENV_NAME_HERE.vault`, and enter the environment variables needed by the project in there. For example for the dev environment of the backend for the `FullStackWebApp` example, you would run `ansible-vault create Configuration/docker/FullStackWebApp/Backend/.env.dev.vault`
-5. Go to the Portainer instance at `https://DOCKER_VM_IP_HERE:9443` and create a password for the `admin` user
-6. Run the different deployment scripts for the projects, following the syntax `ansible-playbook deploy/STACK_NAME_HERE-deploy.yml --extra-vars env=ENV_NAME_HERE` where `ENV_NAME_HERE` is either `dev` or `prod`
+3. Remove the placeholder `Configuration/group_vars/homelab_docker/vault.example` file
+4. Run the `setup/docker_setup.yml` playbook
+5. Inside the project folders of the `Configuration/docker/` folder, create `.env.ENV_NAME_HERE.vault` files using `ansible-vault create Configuration/docker/PROJECT_NAME_HERE/.env.ENV_NAME_HERE.vault`, and enter the environment variables needed by the project in there. For example for the dev environment of the backend for the `FullStackWebApp` example, you would run `ansible-vault create Configuration/docker/FullStackWebApp/Backend/.env.dev.vault`
+6. Go to the Portainer instance at `https://DOCKER_VM_IP_HERE:9443` and create a password for the `admin` user
+7. Run the different deployment scripts for the projects, following the syntax `ansible-playbook deploy/STACK_NAME_HERE-deploy.yml --extra-vars env=ENV_NAME_HERE` where `ENV_NAME_HERE` is either `dev` or `prod`
 
 ### Setting up Cloudflare DDNS
 If you do not want to set up Cloudflare DDNS, you can skip this part.
