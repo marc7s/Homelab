@@ -347,6 +347,28 @@ Reference: https://www.home-assistant.io/integrations/shelly/#shelly-device-conf
 2. Under `Internet & Security`, under `ADVANCED - DEVELOPER SETTINGS`, enable `CoIoT` and in the `CoIoT peer` field, enter `HOME_ASSISTANT_IP_HERE:5683`, replacing with your home assistant IP but keeping the port
 3. Restart the device, through `Settings -> DEVICE REBOOT`
 
+## Setting up TrueNAS Scale
+### Installing Emby
+1. Under `Datasets`, create a new dataset named `configs`
+2. Select the `configs` dataset, and add a new dataset named `emby-config` so that it becomes the child of `configs`
+3. Under `Apps` -> `Available Applications`, install Emby with the following settings:
+  
+  Application Name: emby
+  
+  Environment Variables for Emby Server:
+    Note: Double check that these match with the `emby` user under `Credentials` -> `Local Users`, and that the user/group has the right permissions on the datasets you need
+    - UID: `1000`
+    - GID: `100`
+    - GIDLIST: `100`
+  
+  Enable Host Network: yes
+  
+  Enable Host Path for Emby Server Config Volume: yes
+  
+  Host Path for Emby Server Config Volume: choose the `emby-config` dataset you created
+  
+  Emby Server Extra Host Path Volumes: add your libraries here, for example if you have images on `/mnt/homelab-storage/images` you would select that as `Host Path`, and under `Mount Path in Pod` you would enter `/storage/images` if you want it named `images`
+
 ## Setting up proxbox (a copy of the server for development and testing purposes)
 This is useful for development of this project, as it allows you to virtualize a new homelab server, treating it as a new homelab. In that nested server running Proxmox, you can run the playbooks to validate that everything works, and easily wipe the VM to start over from scratch, making sure you have not forgotten to automate or document any required steps.
 
