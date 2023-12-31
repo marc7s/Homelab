@@ -43,6 +43,21 @@
         name: npm
         state: present
 
+    - name: Install NFS kernel server to access NFS shares
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Set up the mounts
+      ansible.posix.mount:
+        src: "{{ item.src }}"
+        path: "{{ item.path }}"
+        opts: "{{ item.opts }}"
+        boot: true
+        state: mounted
+        fstype: nfs
+      with_items: docker_nfs_mounts
+
     - name: Copy Portainer docker compose
       ansible.builtin.copy:
         src: files/portainer-docker-compose.yml

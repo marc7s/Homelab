@@ -211,7 +211,7 @@ control_node_root_password: THE_ROOT_PASSWORD_FOR_YOUR_ANSIBLE_CONTROL_NODE
   - HTTP proxy information: (blank)
   - Participate in the package usage survey: No
   - Software to install: SSH server, standard system utilities
-2. Create a vault file for the docker setup by running `ansible-vault create Configuration/group_vars/homelab_docker/vault` and enter the following:
+2. Create a vault file for the docker setup by running `ansible-vault create Configuration/group_vars/homelab_docker/vault` and enter the following (modifying the values according to your needs):
 ```yml
 ---
 configuration_repository_name: YOUR_CONFIGURATION_REPOSITORY_NAME
@@ -225,6 +225,10 @@ docker_static_website_repositories:
   - Repository 1 name
   - Repository 2 name
   - ...
+
+docker_nfs_mounts:
+  - { src: '/some/nfs/mount', path: '/mnt/local/mount/path', opts: 'rw' }
+  - { src: '/some/readonly/nfs/mount', path: '/mnt/readonly/mount', opts: 'ro' }
 ```
 Here, `docker_container_repositories` are all the repositories your docker containers will require, **except** static website repositories (they will be hosted with PHP, so they can either be static HTML or PHP projects). Those should be placed in `docker_static_website_repositories` instead. The docker setup script will clone all these repositories for you, that you may then reference in docker composes or playbooks
 3. Remove the placeholder `Configuration/group_vars/homelab_docker/vault.example` file
@@ -260,7 +264,7 @@ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm.sh)"
 ```
 
 Run this in the Proxmox console, `Datacenter -> homelabservername -> Shell`.
-I have allocated 32GB of disk space and 4GB of RAM to the VM, in the installer you have the possibility to customize your installation if you want.
+I have allocated 32GB of disk space and 8GB of RAM to the VM, in the installer you have the possibility to customize your installation if you want.
 
 ### Adding Zigbee USB device
 If you do not have a Zigbee USB stick, you can skip this part.
@@ -286,7 +290,7 @@ IMPORTANT NOTE: The `adapter` part is only needed for some Zigbee sticks, for ex
 
 ### Setting up Tailscale for remote access
 1. Add the Tailscale add-on and set it up
-2. Use the Tailscale IP of the homeassistant VM as the external URL, for example `http://100.100.100:8123`
+2. Use the Tailscale IP of the Home Assistant VM as the external URL, for example `http://100.100.100:8123`
 
 ### Setting up Node-RED
 1. `Settings -> Add-ons -> Add-on store -> Node-RED -> Install`
