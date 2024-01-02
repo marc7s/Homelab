@@ -75,6 +75,13 @@ Since Ansible does not have Windows support, the easiest solution is to set ever
 2. Open the WSL terminal
 3. Set up [Git Credential Manager](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-git#git-credential-manager-setup), the command depends on your Git version
 4. Choose a root password for WSL by following [the WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/setup/environment#set-up-your-linux-username-and-password)
+5. Run `sudo nano /etc/wsl.conf`
+6. Add the following:
+```
+[boot]
+systemd=true
+```
+7. Restart WSL by closing any instances of WSL, and then running `wsl.exe --shutdown` in `cmd.exe`
 
 The rest of the installation process will be carried out through the WSL terminal, and the development and usage of Ansible will be carried out through the VS Code instance opened in WSL.
 
@@ -160,7 +167,7 @@ If it is not a 10G NIC, you might have to modify the following instructions a bi
 `sudo apt install pass`
 9. Create a vault file
 `ansible-vault create Configuration/group_vars/all/vault`
-10. Add a password for that file in the popup. This will be required later if the file needs to be viewed or changed
+10. Add a password for that file if asked in a popup. This will be required later if the file needs to be viewed or changed
 11. Enter the following content (with your own settings) inside that file and save it
 ```yml
 ---
@@ -352,6 +359,20 @@ Reference: https://www.home-assistant.io/integrations/shelly/#shelly-device-conf
 3. Restart the device, through `Settings -> DEVICE REBOOT`
 
 ## Setting up TrueNAS Scale
+Configure your instance as you need and create the shares you need.
+### Accessing TrueNAS Scale SMB shares from the Ansible controller
+1. Create a vault file
+`ansible-vault create Configuration/group_vars/controller/vault`
+2. Add a password for that file if asked in a popup. This will be required later if the file needs to be viewed or changed
+3. Enter the following content (with your own settings) inside that file and save it
+```yml
+---
+controller_smb_mounts:
+  - { src: '//TRUENAS_SCALE_IP_HERE/TRUENAS_SCALE_MOUNT_PATH_HERE', path: 'CONTROLLER_MOUNT_PATH_HERE', opts: 'username=SMB_USERNAME_HERE,password=SMB_USERNAME_HERE,vers=3' }
+```
+4. Remove the placeholder `Configuration/group_vars/controller/vault.example` file
+5. Run the controller setup with `ansible-playbook setup/controller-setup.yml`
+
 ### Installing Emby
 1. Under `Datasets`, create a new dataset named `configs`
 2. Select the `configs` dataset, and add a new dataset named `emby-config` so that it becomes the child of `configs`
