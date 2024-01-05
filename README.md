@@ -423,6 +423,8 @@ An example could be
 or, to deploy all `infra` projects to PROD,
 `ansible-playbook Configuration/deploy/infra-deploy.yml --extra-vars env=prod`
 
+Note that if using the `deploy-docker` or `deploy-static-web` roles to deploy, you can even use templating inside the docker compose files.
+
 ## Creating database backups
 1. Connect to the database through SSMS, then right click the database and select `Tasks -> Back Up...`
 2. As the source, select the correct database, and for `Backup type` select Full

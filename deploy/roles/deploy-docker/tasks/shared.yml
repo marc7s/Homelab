@@ -52,7 +52,7 @@
   become: true
   become_method: su
   become_user: root
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: '{{ local_compose_path }}'
     dest: '{{ remote_compose_path }}'
     owner: docker
