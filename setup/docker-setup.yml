@@ -16,7 +16,9 @@
           # and
           # https://www.reddit.com/r/ansible/comments/ffphxz/rant_centos_7_ansible_dockercompose_so_much_hair/
           - PyYAML==5.3.1
-          - docker
+          # This is also required due to another issue:
+          # https://github.com/docker/docker-py/issues/3194
+          - docker==6.1.3
           - docker-compose
           - PyMySQL
 
@@ -42,6 +44,11 @@
     - name: Install npm, used for development
       ansible.builtin.apt:
         name: npm
+        state: present
+
+    - name: Install curl
+      ansible.builtin.apt:
+        name: curl
         state: present
 
     - name: Install NFS kernel server to access NFS shares
