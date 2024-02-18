@@ -29,8 +29,8 @@
   ansible.builtin.file:
     path: '{{ item }}'
     state: directory
-    owner: docker
-    group: docker
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
     mode: '777'
   with_items: '{{ required_folders }}' 
 
@@ -55,8 +55,8 @@
   ansible.builtin.template:
     src: '{{ local_compose_path }}'
     dest: '{{ remote_compose_path }}'
-    owner: docker
-    group: docker
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
     mode: '0644'
 
 # Stopping the container validates the compose, which will fail if it contains an `env_file` path that has not yet been created
@@ -87,8 +87,8 @@
   ansible.builtin.copy:
     src: '{{ local_env_path }}'
     dest: '{{ remote_env_path }}'
-    owner: docker
-    group: docker
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
     mode: '0644'
   when: local_env_file.stat.exists
 
