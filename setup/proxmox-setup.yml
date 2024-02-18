@@ -25,7 +25,7 @@
         name: "{{ modules.truenas_scale.name }}"
         node: "{{ node }}"
         proxmox_default_behavior: compatibility
-        bios: ovmf
+        bios: "{{ modules.truenas_scale.bios }}"
         cpuunits: 100
         efidisk0:
           efitype: 4m
@@ -67,7 +67,7 @@
         node: "{{ node }}"
         proxmox_default_behavior: compatibility
         agent: true
-        bios: ovmf
+        bios: "{{ modules.docker.bios }}"
         cpuunits: 100
         efidisk0:
           efitype: 4m
