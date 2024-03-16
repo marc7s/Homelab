@@ -401,11 +401,11 @@ This is useful for development of this project, as it allows you to virtualize a
   For AMD CPUs, run
   `cat /sys/module/kvm_amd/parameters/nested`
   For Intel CPUs, run
-  `cat /sys/module/kvm_intel/parameters/nested`
-
+  `cat /sys/module/kvm_intel/parameters/nested`.
   If the output is `Y` or `1`, nested virtualization is supported. If it is `N` or `0`, it is not.
   Check out [how to enable it](https://ostechnix.com/enable-nested-virtualization-in-proxmox/) if it is disabled.
   Since we will run Proxmox inside Proxmox, nested virtualization is required for creating the proxbox development environment
+
 2. Create a new VM in Proxmox, setting `CPU type` to `host` and assigning it the Proxmox ISO
 3. Start the VM, complete the Proxmox installation
 4. Enable ssh access by running `nano .ssh/authorized_keys` and adding the same SSH key as you used for the main server on a new line
