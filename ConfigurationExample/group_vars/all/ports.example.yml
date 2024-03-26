@@ -1,0 +1,14 @@
+---
+PORTS:
+    FullStackWebApp:
+        Backend:
+            DEV: 5001
+            PROD: 7001
+        Database:
+            DEV: 1433
+            PROD: 7433
+        Frontend:
+            DEV: 5000
+            PROD: 7000
+
+    PasswordPusher: 5100

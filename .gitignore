@@ -1,2 +1,3 @@
 .ssh/
 Configuration/
+filter_plugins/__pycache__

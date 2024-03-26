@@ -6,7 +6,7 @@ services:
     container_name: prod-fullstackwebapp-database
     restart: always # Prod should restart automatically on VM startup
     ports:
-      - 7433:1433 # Prod ports
+      - "{{ PORTS.FullStackWebApp.Database.PROD }}:1433" # Prod ports
     env_file:
       - /Deploy/prod-leaderboard-database/.env # Used by the MS SQL image
     volumes:

@@ -8,6 +8,6 @@ services:
     container_name: prod-fullstackwebapp-frontend
     restart: 'always' # Prod should restart automatically on VM startup
     ports:
-      - "{{ 7000 }}:80" # Prod ports (note that you can even use templating when deploying with the deploy-docker or deploy-static-web roles)
+      - "{{ PORTS.FullStackWebApp.Frontend.PROD }}:{{ 80 }}" # Prod ports (note that you can even use templating when deploying with the deploy-docker or deploy-static-web roles)
     volumes:
       - /usr/app/node_modules # Create a volume for `node_modules` so node modules are not overwritten during build

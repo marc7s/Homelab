@@ -7,6 +7,6 @@ services:
     command: npm run prod
     restart: always # Prod should restart automatically on VM startup
     ports:
-      - 7001:7001 # Prod ports
+      - "{{ PORTS.FullStackWebApp.Backend.PROD }}:7001" # Prod ports
     volumes:
       - /usr/app/node_modules # Create a volume for `node_modules` so node modules are not overwritten during build

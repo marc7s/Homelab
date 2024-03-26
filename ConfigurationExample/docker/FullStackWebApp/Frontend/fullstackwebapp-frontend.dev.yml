@@ -9,7 +9,7 @@ services:
     command: npm run dev
     restart: 'no' # Dev environment does not need to be live all the time
     ports:
-      - 5000:4200 # Dev ports
+      - "{{ PORTS.FullStackWebApp.Frontend.DEV }}:4200" # Dev ports
     volumes:
       - /Repos/FullStackWebApp/Frontend:/usr/app/Frontend # Bind mount the repository for development, for example for instant website changes with a `watch` command
       - /usr/app/Frontend/node_modules # Create a volume for `node_modules` so node modules are not overwritten during build

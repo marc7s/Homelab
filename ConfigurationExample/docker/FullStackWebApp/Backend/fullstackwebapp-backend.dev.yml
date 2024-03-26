@@ -7,7 +7,7 @@ services:
     command: npm run dev
     restart: 'no' # Dev environment does not need to be live all the time
     ports:
-      - 5001:5001 # Dev ports
+      - "{{ PORTS.FullStackWebApp.Backend.DEV }}:5001" # Dev ports
     environment:
       - NODE_ENV=development
     volumes:

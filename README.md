@@ -35,6 +35,8 @@ The configuration for your homelab is stored in the gitignored `/Configuration` 
 
 On the remote homelab server: any repositories will be placed in the `/Repos` folder, while this repository will be placed inside the `/Homelab` folder. Any files used for deployment will be placed in the `/Deploy` folder. Although there are exceptions, in general DEV containers will use a bind mount to the repository for accessing the project files, so you can develop in live mode where changes will immediately affect the running container. In contrast, PROD containers will build once deployed, and store the files inside the container.
 
+To keep everything organized, ports are placed in the `Configuration/group_vars/all/ports.yml` file. This allows you to keep all ports in one single file, allowing you to easily change them while looking for potential clashes. You can then reference those in your docker compose files with templating. To ensure you do not have any port clashes, you can run the `ansible-playbook setup/validate-port-clashes.yml` command to automatically check for port clashes, as long as it has the same type of structure as the example ports file.
+
 ## Static data and configs for containers
 The `Containers` folder contains any data for your containers that you want version controlled. For example, [Homer](https://github.com/bastienwirtz/homer) is an easy to configure homepage for your homelab. A `Homer` directory can be used as in the example to keep your `Homer` homepage version controlled. If you want to update your homelab homepage, you can simply edit the `config.yml` file inside the `Homer` folder to modify your homepage. You will not see any files inside this directory from the start, but once you start the `Homer` container, it will generate the files for you. Then you can edit them. *Note:* you do not want any dynamic data in here as that will generate changes to your repository every time the container changes those files. `Homer` only reads from that folder, it does not write to it which means that it is a good fit for the `Containers` folder use case.
 
@@ -161,14 +163,16 @@ If it is not a 10G NIC, you might have to modify the following instructions a bi
 `ansible-galaxy collection install community.docker`
 6. Install the Ansible `posix` collection to install the synchronize module
 `ansible-galaxy collection install ansible.posix`
-7. Install sshpass
+7. Install the Ansible `utils` collection to install the to_paths module
+`ansible-galaxy collection install ansible.utils`
+8. Install sshpass
 `sudo apt install sshpass`
-8. Install pass
+9. Install pass
 `sudo apt install pass`
-9. Create a vault file
+10. Create a vault file
 `ansible-vault create Configuration/group_vars/all/vault`
-10. Add a password for that file if asked in a popup. This will be required later if the file needs to be viewed or changed
-11. Enter the following content (with your own settings) inside that file and save it
+11. Add a password for that file if asked in a popup. This will be required later if the file needs to be viewed or changed
+12. Enter the following content (with your own settings) inside that file and save it
 ```yml
 ---
 vault_proxmox_ssh_username: YOUR_HOMELAB_SERVER_SSH_USERNAME_FOR_SUDO_COMMANDS_ON_THE_PROXMOX_SERVER

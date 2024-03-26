@@ -1,0 +1,31 @@
+- name: Validate port clashes
+  hosts: controller_host
+  vars:
+    ports_file_path: "../Configuration/group_vars/all/ports.yml"
+  tasks:
+    - name: Check the ports file
+      stat:
+        path: "{{ ports_file_path }}"
+      register: ports_file_stat
+
+    - name: Ensure that the ports file exists
+      ansible.builtin.fail:
+        msg: 'The ports file could not be found. Ensure that you have a "ports.yml" file located in the "Configuration/group_vars/all/" folder.'
+      when: 'not ports_file_stat.stat.exists'
+    
+    - name: Parse the contents
+      ansible.builtin.set_fact:
+        ports_content: '{{ (lookup("file", ports_file_path) | from_yaml | ansible.utils.to_paths(wantlist=false)).values() }}'
+
+    - name: Get duplicates
+      ansible.builtin.set_fact:
+        port_duplicates: '{{ ports_content | get_duplicates }}'
+
+    - name: Ensure that there are no port clashes
+      ansible.builtin.fail:
+        msg: 'You have port clashes for the following ports: {{ port_duplicates }}'
+      when: 'port_duplicates | length > 0'
+
+    - name: Validation success
+      ansible.builtin.debug:
+        msg: "Validation complete: no port clashes detected."
