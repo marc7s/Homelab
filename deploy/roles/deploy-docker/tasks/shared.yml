@@ -9,18 +9,21 @@
     # Set the environment file names if it is not an Angular project
     - ansible.builtin.set_fact:
         local_env_file_name: '.env.{{ env_name }}.vault'
+        local_dev_env_file_name: '.env.dev.vault'
         remote_env_path: '{{ remote_build_directory }}/.env'
       when: not is_angular_project
 
     # Set the environment file names if it is an Angular project
     - ansible.builtin.set_fact:
         local_env_file_name: 'environment.{{ env_name }}.ts.vault'
+        local_dev_env_file_name: 'environment.dev.ts.vault'
         remote_env_path: '{{ remote_build_directory }}/src/environments/environment.{{ env_name }}.ts'
       when: is_angular_project
 
     - ansible.builtin.set_fact:
         remote_compose_path: '{{ remote_compose_directory }}/{{ compose_name }}.{{ env_name }}.yml'
         local_env_path: '{{ local_env_directory }}/{{ local_env_file_name }}'
+        local_dev_env_path: '{{ local_env_directory }}/{{ local_dev_env_file_name }}'
 
 - name: Create required folders
   become: true
@@ -39,6 +42,12 @@
   ansible.builtin.stat:
     path: '{{ local_env_path }}'
   register: local_env_file
+
+- name: Check if the project has a DEV environment file that needs to be restored after deployment
+  delegate_to: controller_host
+  ansible.builtin.stat:
+    path: '{{ local_dev_env_path }}'
+  register: local_dev_env_file
 
 - name: Ensure compose directory exists
   become: true
@@ -104,6 +113,19 @@
     restarted: true
     files:
       - '{{ remote_compose_path }}'
+
+# Copy the dev env file to restore after other deployments, since that env file might be used by DEV
+- name: Restore DEV env file
+  become: true
+  become_method: su
+  become_user: root
+  ansible.builtin.copy:
+    src: '{{ local_dev_env_path }}'
+    dest: '{{ remote_env_path }}'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: '0644'
+  when: local_dev_env_file.stat.exists and env_name != 'dev'
 
 - name: 'Remove unused images and volumes'
   become: true
