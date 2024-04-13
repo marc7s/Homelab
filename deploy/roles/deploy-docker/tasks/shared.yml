@@ -82,11 +82,11 @@
   become: true
   become_method: su
   become_user: root
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: '{{ remote_build_directory }}'
     files:
       - '{{ remote_compose_path }}'
-    state: absent
+    state: 'absent'
 
 # Copy and unencrypt the .env file and place it in the correct place on the remote
 - name: Copy env file
@@ -106,11 +106,11 @@
   become: true
   become_method: su
   become_user: root
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: '{{ remote_build_directory }}'
     project_name: '{{ project_name }}-{{ env_name }}'
-    build: true
-    restarted: true
+    build: 'always'
+    state: 'present'
     files:
       - '{{ remote_compose_path }}'
 
