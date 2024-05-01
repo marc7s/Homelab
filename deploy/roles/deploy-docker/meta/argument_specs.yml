@@ -47,11 +47,3 @@ argument_specs:
         required: false
         default: []
         description: "Any folders that need to be created for deploying the container"
-
-      # Since Angular projects has built in environment variable support through their /environments/environment.ENV_NAME.ts files,
-      # enabling this setting will replace those files instead of copying .env files as usual
-      is_angular_project:
-        type: "bool"
-        required: false
-        default: false
-        description: "Enable if it is an Angular project, to set up the environment variables correctly"

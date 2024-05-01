@@ -5,25 +5,10 @@
         local_compose_path: '{{ local_repo_dir }}/Configuration/docker/{{ relative_compose_root }}/{{ compose_name }}.{{ env_name }}.yml'
         remote_compose_directory: '{{ remote_repo_dir }}/Configuration/docker/{{ relative_project_root }}'
         local_env_directory: '{{ local_repo_dir }}/Configuration/docker/{{ relative_compose_root }}'
-
-    # Set the environment file names if it is not an Angular project
-    - ansible.builtin.set_fact:
-        local_env_file_name: '.env.{{ env_name }}.vault'
-        local_dev_env_file_name: '.env.dev.vault'
-        remote_env_path: '{{ remote_build_directory }}/.env'
-      when: not is_angular_project
-
-    # Set the environment file names if it is an Angular project
-    - ansible.builtin.set_fact:
-        local_env_file_name: 'environment.{{ env_name }}.ts.vault'
-        local_dev_env_file_name: 'environment.dev.ts.vault'
-        remote_env_path: '{{ remote_build_directory }}/src/environments/environment.{{ env_name }}.ts'
-      when: is_angular_project
+        remote_env_directory: '{{ remote_build_directory }}'
 
     - ansible.builtin.set_fact:
         remote_compose_path: '{{ remote_compose_directory }}/{{ compose_name }}.{{ env_name }}.yml'
-        local_env_path: '{{ local_env_directory }}/{{ local_env_file_name }}'
-        local_dev_env_path: '{{ local_env_directory }}/{{ local_dev_env_file_name }}'
 
 - name: Create required folders
   become: true
@@ -37,17 +22,30 @@
     mode: '777'
   with_items: '{{ required_folders }}' 
 
-- name: Check if the project has an environment file that needs to be copied
+- name: Check if the project has any environment files
   delegate_to: controller_host
-  ansible.builtin.stat:
-    path: '{{ local_env_path }}'
-  register: local_env_file
+  ansible.builtin.find:
+    paths: '{{ local_env_directory }}'
+    hidden: true
+    patterns:
+      - '.env.{{ env_name }}.*'
+      - 'environment.{{ env_name }}.*' # Used by Angular
+  register: local_env_files_result
 
-- name: Check if the project has a DEV environment file that needs to be restored after deployment
+- name: Check if the project has any development environment files
   delegate_to: controller_host
-  ansible.builtin.stat:
-    path: '{{ local_dev_env_path }}'
-  register: local_dev_env_file
+  ansible.builtin.find:
+    paths: '{{ local_env_directory }}'
+    hidden: true
+    patterns:
+      - '.env.dev.*'
+      - 'environment.dev.*' # Used by Angular
+  register: local_dev_env_files_result
+
+- name: Get the environment file names
+  ansible.builtin.set_fact:
+    local_env_files: '{{ local_env_files_result.files | map(attribute="path") | map("basename") }}'
+    local_dev_env_files: '{{ local_dev_env_files_result.files | map(attribute="path") | map("basename") }}'
 
 - name: Ensure compose directory exists
   become: true
@@ -69,14 +67,14 @@
     mode: '0644'
 
 # Stopping the container validates the compose, which will fail if it contains an `env_file` path that has not yet been created
-- name: 'Make sure remote env file exists so the next step does not fail'
+- name: 'Make sure remote env files exists so the next step does not fail'
   become: true
   become_method: su
   become_user: root
   ansible.builtin.file:
-    path: '{{ remote_env_path }}'
+    path: '{{ remote_env_directory }}/{{ item | replace(".vault", "") }}'
     state: touch
-  when: local_env_file.stat.exists
+  with_items: '{{ local_env_files }}'
 
 - name: 'Stop {{ env_name }}-{{ project_name }} container'
   become: true
@@ -88,18 +86,18 @@
       - '{{ remote_compose_path }}'
     state: 'absent'
 
-# Copy and unencrypt the .env file and place it in the correct place on the remote
+# Copy and unencrypt the environment files and place them in the correct place on the remote
 - name: Copy env file
   become: true
   become_method: su
   become_user: root
   ansible.builtin.copy:
-    src: '{{ local_env_path }}'
-    dest: '{{ remote_env_path }}'
+    src: '{{ local_env_directory }}/{{ item }}'
+    dest: '{{ remote_env_directory }}/{{ item | replace(".vault", "") }}'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
     mode: '0644'
-  when: local_env_file.stat.exists
+  with_items: '{{ local_env_files }}'
 
 
 - name: 'Deploy {{ env_name }}-{{ project_name }} container'
@@ -114,18 +112,19 @@
     files:
       - '{{ remote_compose_path }}'
 
-# Copy the dev env file to restore after other deployments, since that env file might be used by DEV
-- name: Restore DEV env file
+# Copy the dev env files to restore after other deployments, since that env file might be used by DEV
+- name: Restore DEV env files
   become: true
   become_method: su
   become_user: root
   ansible.builtin.copy:
-    src: '{{ local_dev_env_path }}'
-    dest: '{{ remote_env_path }}'
+    src: '{{ local_env_directory }}/{{ item }}'
+    dest: '{{ remote_env_directory }}/{{ item | replace(".vault", "") }}'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
     mode: '0644'
-  when: local_dev_env_file.stat.exists and env_name != 'dev'
+  with_items: '{{ local_dev_env_files }}'
+  when: env_name != 'dev'
 
 - name: 'Remove unused images and volumes'
   become: true

@@ -2,5 +2,4 @@
 relative_compose_root: '{{ relative_project_root }}'
 remote_build_directory: '/Repos/{{ relative_project_root }}'
 required_folders: []
-is_angular_project: false
 build: true
