@@ -72,7 +72,7 @@
   become_method: su
   become_user: root
   ansible.builtin.file:
-    path: '{{ remote_env_directory }}/{{ item | replace(".vault", "") }}'
+    path: '{{ remote_env_directory }}/{{ item | get_remote_env_filename(env_name) }}'
     state: touch
   with_items: '{{ local_env_files }}'
 
@@ -93,7 +93,7 @@
   become_user: root
   ansible.builtin.copy:
     src: '{{ local_env_directory }}/{{ item }}'
-    dest: '{{ remote_env_directory }}/{{ item | replace(".vault", "") }}'
+    dest: '{{ remote_env_directory }}/{{ item | get_remote_env_filename(env_name) }}'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
     mode: '0644'
@@ -109,6 +109,7 @@
     project_name: '{{ project_name }}-{{ env_name }}'
     build: 'always'
     state: 'present'
+    recreate: "always"
     files:
       - '{{ remote_compose_path }}'
 
@@ -119,7 +120,7 @@
   become_user: root
   ansible.builtin.copy:
     src: '{{ local_env_directory }}/{{ item }}'
-    dest: '{{ remote_env_directory }}/{{ item | replace(".vault", "") }}'
+    dest: '{{ remote_env_directory }}/{{ item | get_remote_env_filename("dev") }}'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
     mode: '0644'
