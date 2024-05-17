@@ -72,7 +72,7 @@
   become_method: su
   become_user: root
   ansible.builtin.file:
-    path: '{{ remote_env_directory }}/{{ item | get_remote_env_filename(env_name) }}'
+    path: '{{ remote_env_directory }}/{{ item | get_remote_env_filename(env_name, strip_env_file_name) }}'
     state: touch
   with_items: '{{ local_env_files }}'
 
@@ -93,7 +93,7 @@
   become_user: root
   ansible.builtin.copy:
     src: '{{ local_env_directory }}/{{ item }}'
-    dest: '{{ remote_env_directory }}/{{ item | get_remote_env_filename(env_name) }}'
+    dest: '{{ remote_env_directory }}/{{ item | get_remote_env_filename(env_name, strip_env_file_name) }}'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
     mode: '0644'
@@ -120,7 +120,7 @@
   become_user: root
   ansible.builtin.copy:
     src: '{{ local_env_directory }}/{{ item }}'
-    dest: '{{ remote_env_directory }}/{{ item | get_remote_env_filename("dev") }}'
+    dest: '{{ remote_env_directory }}/{{ item | get_remote_env_filename("dev", strip_env_file_name) }}'
     owner: '{{ ansible_user }}'
     group: '{{ ansible_user }}'
     mode: '0644'

@@ -34,6 +34,12 @@ argument_specs:
         required: true
         choices: ['dev', 'prod']
         description: "The environment to deploy"
+      
+      strip_env_file_name:
+        type: "bool"
+        required: false
+        default: true
+        description: "Whether to strip the environment name from the .env files. If set to true, .env.dev.vault will be copied as .env, otherwise it will be copied as .env.dev"
 
       build:
         type: "bool"
