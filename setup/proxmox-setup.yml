@@ -71,7 +71,7 @@
         cpuunits: 100
         efidisk0:
           efitype: 4m
-          storage: "{{ local_storage_name }}"
+          storage: "{{ docker_storage_name }}"
           format: raw
           pre_enrolled_keys: false
         vga: std

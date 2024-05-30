@@ -140,8 +140,64 @@ If you have a separate Network Interface Card, such as a 10 Gbit network card th
 
 If it is not a 10G NIC, you might have to modify the following instructions a bit to fit your situation.
 1. In Proxmox, open the shell and run the following command: `dmesg | grep ixgbe`
-2. That should show you the 10G NIC. Make a note of the network device name, which could be something like "enp3s0"
-3. In Proxmox, go to the main node and under System -> Network, create a new Linux Bridge and in the "Bridge Ports" field enter the previous network device name. Name it "vmbr10" and make sure that matches with your `network_bridge` setting in the `Configuration/group_vars/homelab_proxmox/vars.yml` file
+2. That should show you the 10G NIC. Make a note of the MAC Address, you will need it in the next step
+3. Follow the next steps [in the next section](#configuring-reliable-networking). Name the network device name "vmbr10" and make sure that matches with your `network_bridge` setting in the `Configuration/group_vars/homelab_proxmox/vars.yml` file
+
+## Configuring reliable networking
+Network interfaces might change if you reconfigure your server, as the names are generated, see [the documentation under the section Systemd Network Interface Names](https://pve.proxmox.com/wiki/Network_Configuration). To combat this, we set up links binding the MAC address of each NIC to a specific network interface name.
+
+For each NIC, assign it a number 1-99. I will call this number NID. Then, under `/etc/systemd/network`, create a new file for each NIC named `NID-ethX.link`, where NID is the number you assigned and X is the identifier for the network device name. In the file, put the following:
+
+```
+[Match]
+MACAddress=aa:bb:cc:dd:ee:ff
+
+[Link]
+Name=ethX
+```
+entering the MAC address of that NIC, and the corresponding network device name as the link name.
+
+Then, update the network configuration to reference these interfaces, which is located under `/etc/network/interfaces`.
+
+For example, if you have a built in 1Gbit port in the motherboard of the server with the MAC address `aa:aa:aa:aa:aa:aa` you wish to assign the name `eth1`, and a separate 10Gbit NIC with the MAC address `bb:bb:bb:bb:bb:bb` you with to assign the name `eth10`, you would run the following commands:
+
+1. `nano /etc/systemd/network/1-eth1.link`
+Content:
+```
+[Match]
+MACAddress=aa:aa:aa:aa:aa:aa
+
+[Link]
+Name=eth1
+```
+2. `nano /etc/systemd/network/10-eth10.link`
+Content:
+```
+[Match]
+MACAddress=bb:bb:bb:bb:bb:bb
+
+[Link]
+Name=eth10
+```
+3. `nano /etc/network/interfaces`
+Content:
+```
+...
+iface eth1 inet manual
+iface eth10 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        ...
+        bridge-ports eth1
+        ...
+
+auto vmbr10
+iface vmbr10 inet manual
+  bridge-ports eth10
+  bridge-stp off
+  bridge-fd 0
+```
 
 ## Preparing TrueNAS Scale and Docker
 1. [Download](https://www.truenas.com/download-truenas-scale/) the TrueNAS Scale ISO that you want, and then go into `Configuration/group_vars/homelab_proxmox/vars.yml` and update the name of the ISO file for the TrueNAS Scale config, making sure it exactly matches the name of the ISO file (including the `.iso` file extension)
@@ -201,13 +257,14 @@ control_node_root_password: THE_ROOT_PASSWORD_FOR_YOUR_ANSIBLE_CONTROL_NODE
 
 ## Setting up the server
 1. With a fresh proxmox installation, go into `Datacenter -> Resource Mappings` and add a mapping for the HBA if you have one with the name `HBA` under `PCI Devices`. Also add your Zigbee USB stick if you have one under USB Devices, with the name `Zigbee`. If you do not have an HBA, you need to comment out that line in the file `Configuration/group_vars/homelab_proxmox/vars.yml`
-2. Enter your homelab name in the file `Configuration/group_vars/homelab_proxmox/vars.yml`, by replacing the `api_host` and `node` values. Also check that the `local_storage_name` is set to match your setup. The `api_host` and `node` values are required because the deployment script needs to find the correct Proxmox instance, which is does by name
-3. Run the proxmox pre-setup playbook
+2. If you want to store the Docker VM on another disk mirror, create a ZFS-mirror through `Datacenter -> farm -> Disks -> ZFS -> Create: ZFS` with the name `dockerpool` and the RAID Level `Mirror`
+3. Enter your homelab name in the file `Configuration/group_vars/homelab_proxmox/vars.yml`, by replacing the `api_host` and `node` values. Also check that the `local_storage_name` is set to match your setup. Set the `docker_storage_name` equal to `local_storage_name` if you want to store the Docker VM on the same pool, or choose another name if you want to place it there, for example `dockerpool` if you created that in the previous step. The `api_host` and `node` values are required because the deployment script needs to find the correct Proxmox instance, which is does by name
+4. Run the proxmox pre-setup playbook
 `ansible-playbook setup/pre-proxmox-setup.yml`
-4. Go into the `Configuration/group_vars/homelab_proxmox/vars.yml` file and change the `enabled` attribute to `false` for the modules you do not want
-5. Run the proxmox setup playbook
+5. Go into the `Configuration/group_vars/homelab_proxmox/vars.yml` file and change the `enabled` attribute to `false` for the modules you do not want
+6. Run the proxmox setup playbook
 `ansible-playbook setup/proxmox-setup.yml`
-6. Start the VMs, and enter their IPs into the `Configuration/hosts.yml file`
+7. Start the VMs, and enter their IPs into the `Configuration/hosts.yml file`
 
 ## Setting up the Docker VM
 1. Complete the debian setup through the GUI by selecting the VM in proxmox, and selecting Console. Use the settings below, if you want to can follow along with [this guide](https://www.youtube.com/watch?v=gGsgl0t8py0)
@@ -215,10 +272,12 @@ control_node_root_password: THE_ROOT_PASSWORD_FOR_YOUR_ANSIBLE_CONTROL_NODE
   - Domain name: docker.local
   - Full name for the new user: docker
   - Username for your account: docker
-  - Partitioning method: Guided - use entire disk
+  - Partitioning method: Guided - use entire disk and set up LVM
   - Disk to partition: SCSI1 (sda)
   - Partitioning scheme: All files in one partition
-  - Write changes to disks: Yes
+  - Write the changes to disks and configure LVM: Yes
+  - Amount of volume group to use for guided partitioning: max
+  - Write the changes to disks: Yes
   - Scan extra installation media: No
   - Debian archive mirror: deb.debian.org
   - HTTP proxy information: (blank)
@@ -245,7 +304,7 @@ docker_nfs_mounts:
 ```
 Here, `docker_container_repositories` are all the repositories your docker containers will require, **except** static website repositories (they will be hosted with PHP, so they can either be static HTML or PHP projects). Those should be placed in `docker_static_website_repositories` instead. The docker setup script will clone all these repositories for you, that you may then reference in docker composes or playbooks
 3. Remove the placeholder `Configuration/group_vars/homelab_docker/vault.example` file
-4. Run the `setup/docker_setup.yml` playbook
+4. Run the `setup/docker_setup.yml` playbook (note that you might have to manually SSH into the VM from the Ansible controller first to set the keys up, so Ansible can connect)
 5. Inside the project folders of the `Configuration/docker/` folder, create `.env.ENV_NAME_HERE.vault` files using `ansible-vault create Configuration/docker/PROJECT_NAME_HERE/.env.ENV_NAME_HERE.vault`, and enter the environment variables needed by the project in there. For example for the dev environment of the backend for the `FullStackWebApp` example, you would run `ansible-vault create Configuration/docker/FullStackWebApp/Backend/.env.dev.vault`
 6. Go to the Portainer instance at `https://DOCKER_VM_IP_HERE:9443` and create a password for the `admin` user
 7. Run the different deployment scripts for the projects, following the syntax `ansible-playbook deploy/STACK_NAME_HERE-deploy.yml --extra-vars env=ENV_NAME_HERE` where `ENV_NAME_HERE` is either `dev` or `prod`

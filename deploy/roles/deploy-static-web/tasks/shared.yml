@@ -48,6 +48,7 @@
   import_role:
     name: deploy-docker
   vars:
+    remote_build_directory: '{{ deploy_directory }}'
     relative_project_root: ''
     relative_compose_root: static-web
     project_name: '{{ project_name }}'

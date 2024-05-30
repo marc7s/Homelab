@@ -56,6 +56,7 @@
         name: nfs-kernel-server
         state: present
 
+    # Note: This does not work currently and so has been disabled
     - name: Set up the mounts
       ansible.posix.mount:
         src: "{{ item.src }}"
@@ -65,6 +66,7 @@
         state: mounted
         fstype: nfs
       with_items: "{{ docker_nfs_mounts }}"
+      when: false
 
     - name: Copy Portainer docker compose
       ansible.builtin.copy:
@@ -143,6 +145,7 @@
     - name: Start Portainer
       community.docker.docker_compose_v2:
         project_src: /
+        project_name: 'portainer'
         files:
           - docker-compose.yml
       register: output
