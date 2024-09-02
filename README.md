@@ -314,6 +314,16 @@ If you do not want to set up Cloudflare DDNS, you can skip this part.
 1. Copy the file located in `ConfigurationExample/Containers/Cloudflare_DDNS/config.example.json` and rename it, so it is located at `/Homelab/Configuration/Containers/Cloudflare_DDNS/config.json` on the docker VM
 2. Replace the api token with one you generate, through `Cloudflare Dashboard -> My Profile -> API Tokens -> Create Token -> Edit zone DNS template, choose the correct zone from the dropdown and save`
 
+### Setting up CrowdSec
+1. Go to the Proxmox shell and run the following: `curl -s https://packagecloud.io/install/repositories/crowdsec/crowdsec/script.deb.sh | os=debian dist=11 bash`
+2. `apt update && apt upgrade`
+3. `apt install crowdsec`
+4. `apt install crowdsec-firewall-bouncer`
+5. `nano /etc/crowdsec/config.yaml`
+6. Add `use_wal: true` under as a property on `db_config`
+7. `service crowdsec start`
+8. `cscli console enroll YOUR_TOKEN_HERE`, get the token from the crowdsec website after creating an account
+
 ### Connecting to a Database
 Once Portainer is up and running, you should be able to connect to the SQL Server database. You can try that it works by SSHing into the portainer VM, then running `docker exec -it sqlserver "bash"` to start an interactive bash terminal inside the `sqlserver` docker container, then running `/opt/mssql-tools/bin/sqlcmd -S localhost -U SA`, entering the SA account password (from the `.env.dev.vault` file). It should then display `1>` if it is working, according to the [documentation](https://learn.microsoft.com/en-us/sql/linux/quickstart-install-connect-docker?view=sql-server-ver16&preserve-view=true&pivots=cs1-bash#connect-to-sql-server).
 
@@ -491,11 +501,17 @@ or, to deploy all `infra` projects to PROD,
 Note that if using the `deploy-docker` or `deploy-static-web` roles to deploy, you can even use templating inside the docker compose files.
 
 ## Creating database backups
+### Creating a backup
 1. Connect to the database through SSMS, then right click the database and select `Tasks -> Back Up...`
 2. As the source, select the correct database, and for `Backup type` select Full
-3. Under destination, for `Back up to:`, select `Disk`, and then enter `/var/opt/mssql/data/DatabaseBackup`
-4. Open a new WSL instance, and enter `scp root@DOCKER_IP_HERE:/Deploy/DATABASE_PROJECT_PATH_HERE/data/DatabaseBackup ./Database-DATE_HERE.bak`
+3. Under destination, for `Back up to:`, select `Disk`, and then enter `/var/opt/mssql/data/backup.bak`
+4. Open a new WSL instance, and enter `scp root@DOCKER_IP_HERE:/Deploy/DATABASE_PROJECT_PATH_HERE/data/backup.bak ./Database-DATE_HERE.bak`
 5. Execute `explorer.exe .` to open an Explorer window in that folder, taking you directly to the backup file which you can then move to where you would like to store it
+
+### Restoring from backup
+1. Open a new WSL instance, cd to the location of the backup `.bak` file, and enter `scp ./BACKUP_FILE_NAME.bak root@DOCKER_IP_HERE:/Deploy/DATABASE_PROJECT_PATH_HERE/data/DatabaseBackup/backup.bak`
+2. Connect to the database through SSMS, then right click the Databases folder and select `Restore Database...`
+3. Choose `Device` as the source, press the three dots to select the media, then press `Add` and navigate to `/var/opt/mssql/data/DatabaseBackup` and choose the `backup.bak` file
 
 # Thanks
 Special thanks to [Jeff Geerling](https://github.com/geerlingguy) for the Ansible roles that were really helpful to this project.
