@@ -227,10 +227,16 @@ iface vmbr10 inet manual
 `sudo apt install sshpass`
 9. Install pass
 `sudo apt install pass`
-10. Create a vault file
+10. Generate a GPG key for the password store and save it
+`gpg --full-generate-key`´
+11. Initialize the password store with the `pub` string from the generated GPG key
+`pass init [GPG pub]`
+12. Add the ansible password
+`pass insert ansible-vault-password`
+13. Create a vault file
 `ansible-vault create Configuration/group_vars/all/vault`
-11. Add a password for that file if asked in a popup. This will be required later if the file needs to be viewed or changed
-12. Enter the following content (with your own settings) inside that file and save it
+14. Add a password for that file if asked in a popup. This will be required later if the file needs to be viewed or changed
+15. Enter the following content (with your own settings) inside that file and save it
 ```yml
 ---
 vault_proxmox_ssh_username: YOUR_HOMELAB_SERVER_SSH_USERNAME_FOR_SUDO_COMMANDS_ON_THE_PROXMOX_SERVER
